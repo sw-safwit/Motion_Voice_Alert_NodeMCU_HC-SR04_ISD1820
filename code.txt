@@ -1,0 +1,57 @@
+// กำหนดขา Pin สำหรับ HC-SR04
+const int trigPin = D5;
+const int echoPin = D6;
+
+// กำหนดขา Pin สำหรับ ISD1820
+const int playPin = D1;
+
+// กำหนดตัวแปรสำหรับคำนวณระยะทาง
+long duration;
+int distance;
+
+// ตั้งค่าระยะทางที่ต้องการให้เตือน (หน่วยเป็นเซนติเมตร)
+const int alertDistance = 10; 
+
+void setup() {
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  pinMode(playPin, OUTPUT);
+  
+  digitalWrite(playPin, LOW);
+  
+  Serial.begin(115200);
+  Serial.println("Ultrasonic Sound Alarm Ready!");
+}
+
+void loop() {
+  // 1. ส่งสัญญาณ Ultrasonic
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  // 2. รับสัญญาณสะท้อนกลับเพื่อคำนวณระยะทาง
+  duration = pulseIn(echoPin, HIGH);
+  distance = duration * 0.034 / 2;
+
+  // แสดงผลระยะทางใน Serial Monitor
+  Serial.print("Distance: ");
+  Serial.print(distance);
+  Serial.println(" cm");
+
+  // 3. เงื่อนไขการส่งเสียงเตือน
+  // ตรวจจับวัตถุในระยะ (ต้องมากกว่า 0 เพื่อป้องกันค่า Error)
+  if (distance > 0 && distance <= alertDistance) {
+    Serial.println("!!! Object Detected - Playing Sound !!!");
+    
+    digitalWrite(playPin, HIGH); // สั่งเล่นเสียง
+    delay(200);                  // จ่ายไฟแวบเดียวเพื่อ Trigger
+    digitalWrite(playPin, LOW);
+    
+    // หน่วงเวลาเพื่อรอให้เสียงเล่นจบ หรือเพื่อไม่ให้เสียงดังซ้ำซ้อนเร็วเกินไป
+    delay(3000); 
+  }
+
+  delay(100); // พักการวนลูปเล็กน้อย
+}
